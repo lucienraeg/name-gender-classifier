@@ -19,7 +19,6 @@ def wordToDigits(word):
 		wordD[i] = (number)
 	return(wordD)
 
-print("Importing training data from '%s'" % (source))
 # import training data
 with open(source) as csvfile:
 	readCSV = csv.reader(csvfile, delimiter=',')
@@ -33,18 +32,17 @@ with open(source) as csvfile:
 		sexes.append(sex)
 
 # gather and format features and labels
-features = []
+X = []
 for name in names:
 	# turn names into digits
 	nameD = wordToDigits(name)
-	features.append(nameD)
-labels = sexes
+	X.append(nameD)
+y = sexes
 genderName = {0: "Girl", 1: "Boy"}
 
 # decide whether or not want to calculate accuracy (0 to go straight to manual testing)
 calculate_accuracy = 0
 
-print("Setting aside testing indicies")
 # set aside a random selection of indicies for testing
 test_idx = []
 test_amount = 0.0004*calculate_accuracy # 1 = all
@@ -52,34 +50,32 @@ test_amount = 0.0004*calculate_accuracy # 1 = all
 for i in range(int(len(names)*test_amount)):
 	test_idx.append(random.randint(0,len(names)-1))
 
-print("Sorting training data and omitting testing data")
 # training data into numpy arrays, with testing data omitted
+training_data = X
+training_target = y
+
 current_test_idx = 0
 for i in test_idx:
-	training_data = np.delete(features,test_idx, axis=0)
-	training_target = np.delete(labels,test_idx)
+	training_data = np.delete(X,test_idx, axis=0)
+	training_target = np.delete(y,test_idx)
 	print("%i / %i: %i" % (current_test_idx,len(test_idx)-1,i))
 	current_test_idx += 1
 
-print("Sorting testing data")
 # testing data into numpy arrays
-testing_data = np.array(features)[test_idx]
-testing_target = np.array(labels)[test_idx]
+testing_data = np.array(X)[test_idx]
+testing_target = np.array(y)[test_idx]
 
-print("Defining Classifier")
 # classifier
-# from sklearn import tree
-# clf = tree.DecisionTreeClassifier() # decide classifier
+from sklearn import tree
+clf = tree.DecisionTreeClassifier() # decide classifier
 
-from sklearn.neighbors import KNeighborsClassifier
-clf = KNeighborsClassifier()
+# from sklearn.neighbors import KNeighborsClassifier
+# clf = KNeighborsClassifier()
 
-print("Fitting Classifier")
-clf = clf.fit(features, labels) # find patterns in data
+clf = clf.fit(training_data, training_target) # find patterns in data
 
 
 if calculate_accuracy:
-	print("Testing Accuracy")
 	# test accuracy
 	test_length = len(testing_data)
 	correct_predictions = 0
@@ -97,7 +93,10 @@ if calculate_accuracy:
 
 # manual testing
 while True:
-	namesToTest = input("What name/s would you like to test? ").split()
+	# namesToTest = input("What name/s would you like to test? ").split()
+	namesToTest = "fish".split()
 	for nameToTest in namesToTest:
 		predictedGender = genderName[int(clf.predict([wordToDigits(nameToTest)]))]
 		print("Predicted Gender of %s: %s" % (nameToTest.title(),predictedGender))
+
+	break
