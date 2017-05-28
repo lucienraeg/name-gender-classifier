@@ -8,6 +8,9 @@
 import csv
 import random
 import numpy as np
+from sklearn import tree
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 source = 'names.csv'
 
 # turns a word into a list of digits
@@ -40,63 +43,25 @@ for name in names:
 y = sexes
 genderName = {0: "Girl", 1: "Boy"}
 
-# decide whether or not want to calculate accuracy (0 to go straight to manual testing)
-calculate_accuracy = 0
-
-# set aside a random selection of indicies for testing
-test_idx = []
-test_amount = 0.0004*calculate_accuracy # 1 = all
-
-for i in range(int(len(names)*test_amount)):
-	test_idx.append(random.randint(0,len(names)-1))
-
-# training data into numpy arrays, with testing data omitted
-training_data = X
-training_target = y
-
-current_test_idx = 0
-for i in test_idx:
-	training_data = np.delete(X,test_idx, axis=0)
-	training_target = np.delete(y,test_idx)
-	print("%i / %i: %i" % (current_test_idx,len(test_idx)-1,i))
-	current_test_idx += 1
-
-# testing data into numpy arrays
-testing_data = np.array(X)[test_idx]
-testing_target = np.array(y)[test_idx]
+# split training / testing data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = .0002)
 
 # classifier
-from sklearn import tree
 clf = tree.DecisionTreeClassifier() # decide classifier
 
 # from sklearn.neighbors import KNeighborsClassifier
 # clf = KNeighborsClassifier()
 
-clf = clf.fit(training_data, training_target) # find patterns in data
+# fit to classifier
+clf = clf.fit(X_train, y_train) # find patterns in data
 
-
-if calculate_accuracy:
-	# test accuracy
-	test_length = len(testing_data)
-	correct_predictions = 0
-
-	for i in range(test_length):
-		data = testing_data[i]
-		target = testing_target[i]
-		prediction = clf.predict([data])	
-		if prediction == target:
-			correct_predictions += 1
-
-	print("Correct Predictions: %s / %s" % (correct_predictions,test_length))
-	accuracy = (correct_predictions/test_length)*100
-	print("Accuracy: %.2f" % (accuracy))
+# test accuracy
+predictions = clf.predict(X_test)
+print("Accuracy: %.2f" % accuracy_score(y_test, predictions))
 
 # manual testing
 while True:
-	# namesToTest = input("What name/s would you like to test? ").split()
-	namesToTest = "fish".split()
+	namesToTest = input("What name/s would you like to test? ").split()
 	for nameToTest in namesToTest:
 		predictedGender = genderName[int(clf.predict([wordToDigits(nameToTest)]))]
 		print("Predicted Gender of %s: %s" % (nameToTest.title(),predictedGender))
-
-	break
